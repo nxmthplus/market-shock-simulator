@@ -1,19 +1,35 @@
-from src.data_loader import load_stock_data
+from src.portfolio import calculate_portfolio_value
 import matplotlib.pyplot as plt
 
-data = load_stock_data(
-    ["AAPL", "NVDA"],
-    "2024-01-01",
-    "2025-01-01"
+total_investment = 10000
+
+stocks = ["AAPL", "NVDA", "JPM"]
+weight_values = [0.4, 0.3, 0.3]
+
+if sum(weight_values) != 1.0:
+    print("Weights must add up to 1.0")
+    exit()
+    
+weights = dict(zip(stocks, weight_values))
+
+portfolio_values = calculate_portfolio_value(
+    total_investment,
+    weights
 )
 
-close_prices = data["Close"]
+print(portfolio_values)
 
-close_prices.plot(figsize=(12, 6))
+labels = portfolio_values.keys()
+sizes = portfolio_values.values()
 
-plt.title("Stock Prices Over Time")
-plt.xlabel("Date")
-plt.ylabel("Price")
-plt.grid(True)
+plt.figure(figsize=(8, 8))
+
+plt.pie(
+    sizes,
+    labels=labels,
+    autopct="%1.1f%%"
+)
+
+plt.title("Portfolio Allocation")
 
 plt.show()
