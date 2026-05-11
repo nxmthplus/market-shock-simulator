@@ -1,5 +1,7 @@
 from src.portfolio import calculate_portfolio_value
+from src.shocks import apply_shock
 import matplotlib.pyplot as plt
+import pandas as pd
 
 total_investment = 10000
 
@@ -9,7 +11,7 @@ weight_values = [0.4, 0.3, 0.3]
 if sum(weight_values) != 1.0:
     print("Weights must add up to 1.0")
     exit()
-    
+
 weights = dict(zip(stocks, weight_values))
 
 portfolio_values = calculate_portfolio_value(
@@ -17,19 +19,37 @@ portfolio_values = calculate_portfolio_value(
     weights
 )
 
-print(portfolio_values)
+tech_crash = {
+    "AAPL": -0.20,
+    "NVDA": -0.30,
+    "JPM": -0.05
+}
 
-labels = portfolio_values.keys()
-sizes = portfolio_values.values()
+shocked_values = apply_shock(portfolio_values, tech_crash)
 
-plt.figure(figsize=(8, 8))
+original_total = sum(portfolio_values.values())
+shocked_total = sum(shocked_values.values())
+loss_amount = original_total - shocked_total
+loss_percentage = loss_amount / original_total * 100
 
-plt.pie(
-    sizes,
-    labels=labels,
-    autopct="%1.1f%%"
-)
+print("Original portfolio:", portfolio_values)
+print("After shock:", shocked_values)
+print("Original total:", original_total)
+print("After shock total:", shocked_total)
+print("Loss amount:", loss_amount)
+print("Loss percentage:", round(loss_percentage, 2), "%")
 
-plt.title("Portfolio Allocation")
+df = pd.DataFrame({
+    "Original": portfolio_values,
+    "After Shock": shocked_values
+})
+
+df.plot(kind="bar", figsize=(10, 6))
+
+plt.title("Portfolio Value Before and After Market Shock")
+plt.xlabel("Stock")
+plt.ylabel("Value")
+plt.xticks(rotation=0)
+plt.grid(axis="y")
 
 plt.show()
