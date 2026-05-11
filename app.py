@@ -1,3 +1,4 @@
+from src.sector_mapper import get_sector_map
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -8,7 +9,7 @@ from src.simulation import (
 )
 
 from src.portfolio import calculate_portfolio_value
-from src.shocks import apply_shock, get_shock_scenario
+from src.shocks import get_sector_shock_scenario, apply_sector_shock
 from src.data_loader import (
     load_stock_data,
     calculate_daily_returns,
@@ -35,7 +36,11 @@ scenario_name = st.selectbox(
         "Tech Crash",
         "Banking Crisis",
         "Full Market Crash",
-        "AI Bubble Burst"
+        "AI Bubble Burst",
+        "Interest Rate Hike",
+        "Oil Crisis",
+        "Pandemic Shock",
+        "AI Boom"
     ]
 
     
@@ -45,19 +50,93 @@ scenario_descriptions = {
     "Tech Crash": "Simulates a selloff in high-growth technology stocks, based on the 2022 tech market downturn.",
     "Banking Crisis": "Simulates financial-sector stress using historical crisis-period market behavior.",
     "Full Market Crash": "Simulates a broad market selloff where most assets are under pressure.",
-    "AI Bubble Burst": "Simulates a sharp correction in AI-related growth stocks."
+    "AI Bubble Burst": "Simulates a sharp correction in AI-related growth stocks.",
+    "Interest Rate Hike": "Simulates aggressive central bank rate hikes, hurting growth stocks and rate-sensitive sectors.",
+    "Oil Crisis": "Simulates a sharp rise in oil prices, benefiting energy stocks while pressuring consumers and industrial firms.",
+    "Pandemic Shock": "Simulates pandemic-style disruption where healthcare and tech may hold up better than travel, energy, and cyclicals.",
+    "AI Boom": "Simulates a positive AI-driven rally, especially benefiting technology and communication services stocks."
 }
 
 st.info(scenario_descriptions[scenario_name])
 
 st.subheader("Portfolio Weights")
 
-aapl_weight = st.slider("AAPL Weight", 0.0, 1.0, 0.4)
-nvda_weight = st.slider("NVDA Weight", 0.0, 1.0, 0.3)
-jpm_weight = st.slider("JPM Weight", 0.0, 1.0, 0.3)
+popular_stocks = pd.DataFrame({
+    "Company": [
+        "Apple",
+        "Microsoft",
+        "Nvidia",
+        "Amazon",
+        "Alphabet / Google",
+        "Meta Platforms",
+        "Tesla",
+        "JPMorgan Chase",
+        "Berkshire Hathaway",
+        "Eli Lilly",
+        "Broadcom",
+        "Visa",
+        "Mastercard",
+        "Exxon Mobil",
+        "UnitedHealth",
+        "Walmart",
+        "Procter & Gamble",
+        "Johnson & Johnson",
+        "Netflix",
+        "Advanced Micro Devices"
+    ],
+    "Ticker": [
+        "AAPL",
+        "MSFT",
+        "NVDA",
+        "AMZN",
+        "GOOGL",
+        "META",
+        "TSLA",
+        "JPM",
+        "BRK-B",
+        "LLY",
+        "AVGO",
+        "V",
+        "MA",
+        "XOM",
+        "UNH",
+        "WMT",
+        "PG",
+        "JNJ",
+        "NFLX",
+        "AMD"
+    ]
+})
 
-weight_values = [aapl_weight, nvda_weight, jpm_weight]
-stocks = ["AAPL", "NVDA", "JPM"]
+with st.expander("Popular stock ticker guide"):
+    st.dataframe(popular_stocks)
+
+    st.markdown(
+    "[View full Yahoo Finance ticker list](https://finance.yahoo.com/markets/stocks/)"
+    )
+
+ticker_input = st.text_input(
+    "Enter stock tickers separated by commas",
+    "AAPL,NVDA,JPM,MSFT,GOOGL"
+)
+
+
+stocks = [
+    ticker.strip().upper()
+    for ticker in ticker_input.split(",")
+    if ticker.strip() != ""
+]
+
+weight_values = []
+
+for stock in stocks:
+    weight = st.slider(
+        f"{stock} Weight",
+        0.0,
+        1.0,
+        round(1.0 / len(stocks), 2)
+    )
+    weight_values.append(weight)
 
 if round(sum(weight_values), 2) != 1.0:
 
@@ -72,11 +151,16 @@ else:
         weights
     )
 
-    shock = get_shock_scenario(scenario_name)
+    sector_map = get_sector_map(stocks)
+    sector_shocks = get_sector_shock_scenario(
+        scenario_name
+    )
 
-    shocked_values = apply_shock(
+    shocked_values = apply_sector_shock(
         portfolio_values,
-        shock
+        sector_map,
+        sector_shocks
+
     )
 
     original_total = sum(portfolio_values.values())
@@ -149,7 +233,11 @@ else:
         "Tech Crash": ("2022-01-01", "2022-12-31"),
         "Banking Crisis": ("2008-01-01", "2008-12-31"),
         "Full Market Crash": ("2020-02-01", "2020-04-30"),
-        "AI Bubble Burst": ("2022-01-01", "2022-12-31")
+        "AI Bubble Burst": ("2022-01-01", "2022-12-31"),
+        "Interest Rate Hike": ("2022-01-01", "2022-12-31"),
+        "Oil Crisis": ("2022-02-01", "2022-06-30"),
+        "Pandemic Shock": ("2020-02-01", "2020-04-30"),
+        "AI Boom": ("2023-01-01", "2023-12-31")
     }
 
     start_date, end_date = historical_periods[scenario_name]
