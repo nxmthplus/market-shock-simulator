@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 
 from src.portfolio import calculate_portfolio_value
 from src.shocks import apply_shock, get_shock_scenario
@@ -55,9 +56,22 @@ else:
     })
 
     st.subheader("Portfolio Value Before vs After Shock")
-    st.bar_chart(df)
+
+    plot_df = df.reset_index()
+    plot_df.columns = ["Stock", "Original", "After Shock"]
+
+    fig = px.bar(
+        plot_df,
+        x="Stock",
+        y=["Original", "After Shock"],
+        barmode="group",
+        title="Portfolio Value Comparison"
+    )
+
+    st.plotly_chart(fig)
 
     st.subheader("Portfolio Allocation")
+
     allocation_df = pd.DataFrame({
         "Stock": stocks,
         "Weight": weight_values
