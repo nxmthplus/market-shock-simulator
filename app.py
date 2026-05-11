@@ -1,5 +1,5 @@
 from src.portfolio import calculate_portfolio_value
-from src.shocks import apply_shock
+from src.shocks import apply_shock, get_shock_scenario
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -19,19 +19,20 @@ portfolio_values = calculate_portfolio_value(
     weights
 )
 
-tech_crash = {
-    "AAPL": -0.20,
-    "NVDA": -0.30,
-    "JPM": -0.05
-}
+from src.shocks import apply_shock, get_shock_scenario
 
-shocked_values = apply_shock(portfolio_values, tech_crash)
+scenario_name = "AI Bubble Burst"
+
+shock = get_shock_scenario(scenario_name)
+
+shocked_values = apply_shock(portfolio_values, shock)
 
 original_total = sum(portfolio_values.values())
 shocked_total = sum(shocked_values.values())
 loss_amount = original_total - shocked_total
 loss_percentage = loss_amount / original_total * 100
 
+print("Scenario:", scenario_name)
 print("Original portfolio:", portfolio_values)
 print("After shock:", shocked_values)
 print("Original total:", original_total)
