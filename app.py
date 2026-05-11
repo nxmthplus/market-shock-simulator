@@ -9,6 +9,11 @@ from src.simulation import (
 
 from src.portfolio import calculate_portfolio_value
 from src.shocks import apply_shock, get_shock_scenario
+from src.data_loader import (
+    load_stock_data,
+    calculate_daily_returns,
+    calculate_historical_metrics
+)
 
 
 st.title("Market Shock Simulator")
@@ -32,7 +37,18 @@ scenario_name = st.selectbox(
         "Full Market Crash",
         "AI Bubble Burst"
     ]
+
+    
 )
+
+scenario_descriptions = {
+    "Tech Crash": "Simulates a selloff in high-growth technology stocks, based on the 2022 tech market downturn.",
+    "Banking Crisis": "Simulates financial-sector stress using historical crisis-period market behavior.",
+    "Full Market Crash": "Simulates a broad market selloff where most assets are under pressure.",
+    "AI Bubble Burst": "Simulates a sharp correction in AI-related growth stocks."
+}
+
+st.info(scenario_descriptions[scenario_name])
 
 st.subheader("Portfolio Weights")
 
@@ -129,6 +145,30 @@ else:
     })
 
     st.dataframe(allocation_df)
+    historical_periods = {
+        "Tech Crash": ("2022-01-01", "2022-12-31"),
+        "Banking Crisis": ("2008-01-01", "2008-12-31"),
+        "Full Market Crash": ("2020-02-01", "2020-04-30"),
+        "AI Bubble Burst": ("2022-01-01", "2022-12-31")
+    }
+
+    start_date, end_date = historical_periods[scenario_name]
+
+    historical_data = load_stock_data(
+        stocks,
+        start_date,
+        end_date
+    )
+
+    daily_returns = calculate_daily_returns(
+        historical_data
+    )
+
+    expected_return, volatility = (
+        calculate_historical_metrics(
+            daily_returns
+        )
+    )
 
     st.subheader("Monte Carlo Risk Simulation")
 
@@ -140,17 +180,6 @@ else:
         step=100
     )
 
-    scenario_params = get_monte_carlo_parameters(
-        scenario_name
-    )
-
-    expected_return = scenario_params[
-        "expected_return"
-    ]
-
-    volatility = scenario_params[
-        "volatility"
-    ]
 
     st.write(
         f"Scenario Expected Return: "
