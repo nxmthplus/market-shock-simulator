@@ -1,56 +1,66 @@
-from src.portfolio import calculate_portfolio_value
-from src.shocks import apply_shock, get_shock_scenario
-import matplotlib.pyplot as plt
+import streamlit as st
 import pandas as pd
 
-total_investment = 10000
-
-stocks = ["AAPL", "NVDA", "JPM"]
-weight_values = [0.4, 0.3, 0.3]
-
-if sum(weight_values) != 1.0:
-    print("Weights must add up to 1.0")
-    exit()
-
-weights = dict(zip(stocks, weight_values))
-
-portfolio_values = calculate_portfolio_value(
-    total_investment,
-    weights
-)
-
+from src.portfolio import calculate_portfolio_value
 from src.shocks import apply_shock, get_shock_scenario
 
-scenario_name = "AI Bubble Burst"
+st.title("Market Shock Simulator")
+st.write("Simulate how a portfolio reacts to different market crash scenarios.")
 
-shock = get_shock_scenario(scenario_name)
+total_investment = st.number_input(
+    "Total Investment Amount",
+    min_value=1000,
+    value=10000,
+    step=1000
+)
 
-shocked_values = apply_shock(portfolio_values, shock)
+scenario_name = st.selectbox(
+    "Choose Shock Scenario",
+    ["Tech Crash", "Banking Crisis", "Full Market Crash", "AI Bubble Burst"]
+)
 
-original_total = sum(portfolio_values.values())
-shocked_total = sum(shocked_values.values())
-loss_amount = original_total - shocked_total
-loss_percentage = loss_amount / original_total * 100
+st.subheader("Portfolio Weights")
 
-print("Scenario:", scenario_name)
-print("Original portfolio:", portfolio_values)
-print("After shock:", shocked_values)
-print("Original total:", original_total)
-print("After shock total:", shocked_total)
-print("Loss amount:", loss_amount)
-print("Loss percentage:", round(loss_percentage, 2), "%")
+aapl_weight = st.slider("AAPL Weight", 0.0, 1.0, 0.4)
+nvda_weight = st.slider("NVDA Weight", 0.0, 1.0, 0.3)
+jpm_weight = st.slider("JPM Weight", 0.0, 1.0, 0.3)
 
-df = pd.DataFrame({
-    "Original": portfolio_values,
-    "After Shock": shocked_values
-})
+weight_values = [aapl_weight, nvda_weight, jpm_weight]
+stocks = ["AAPL", "NVDA", "JPM"]
 
-df.plot(kind="bar", figsize=(10, 6))
+if round(sum(weight_values), 2) != 1.0:
+    st.warning("Weights must add up to 1.0")
+else:
+    weights = dict(zip(stocks, weight_values))
 
-plt.title("Portfolio Value Before and After Market Shock")
-plt.xlabel("Stock")
-plt.ylabel("Value")
-plt.xticks(rotation=0)
-plt.grid(axis="y")
+    portfolio_values = calculate_portfolio_value(total_investment, weights)
+    shock = get_shock_scenario(scenario_name)
+    shocked_values = apply_shock(portfolio_values, shock)
 
-plt.show()
+    original_total = sum(portfolio_values.values())
+    shocked_total = sum(shocked_values.values())
+    loss_amount = original_total - shocked_total
+    loss_percentage = loss_amount / original_total * 100
+
+    st.subheader("Results")
+
+    st.metric("Original Portfolio Value", f"${original_total:,.2f}")
+    st.metric("Value After Shock", f"${shocked_total:,.2f}")
+    st.metric("Loss Amount", f"${loss_amount:,.2f}")
+    st.metric("Loss Percentage", f"{loss_percentage:.2f}%")
+
+    df = pd.DataFrame({
+        "Original": portfolio_values,
+        "After Shock": shocked_values
+    })
+
+    st.subheader("Portfolio Value Before vs After Shock")
+    st.bar_chart(df)
+
+    st.subheader("Portfolio Allocation")
+    allocation_df = pd.DataFrame({
+        "Stock": stocks,
+        "Weight": weight_values
+    })
+
+    st.dataframe(allocation_df)
