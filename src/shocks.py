@@ -32,4 +32,4 @@ def apply_shock(portfolio_values, shock_percentages):
         shock = shock_percentages.get(stock, 0)
         shocked_values[stock] = value * (1 + shock)
 
-    return shocked_values
+    return shocked_values   
