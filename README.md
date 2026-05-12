@@ -20,7 +20,7 @@ A financial risk analytics dashboard that simulates how stock portfolios react t
 
 ### Main Dashboard
 
-![Main Dashboard](images/dashboard.png)
+![Main Dashboard](images/Dashboard.png)
 
 ### Market Shock Analysis
 
@@ -28,7 +28,7 @@ A financial risk analytics dashboard that simulates how stock portfolios react t
 
 ### Monte Carlo Risk Simulation
 
-![Monte Carlo Simulation](images/monte-carlo.png)
+![Monte Carlo Simulation](images/montecarlo.png)
 
 ### Dynamic Portfolio Builder
 
