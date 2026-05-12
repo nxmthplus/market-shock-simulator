@@ -20,7 +20,7 @@ A financial risk analytics dashboard that simulates how stock portfolios react t
 
 ### Main Dashboard
 
-![Main Dashboard](images/Dashboard.png)
+![Main Dashboard](images/dashboardfr.png)
 
 ### Market Shock Analysis
 
